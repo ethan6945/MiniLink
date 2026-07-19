@@ -72,6 +72,10 @@ enum L10n {
         "settings.launchAtLogin": "Launch at login",
         "settings.launchFailed": "Could not set launch at login: %@\n(Run as MiniLink.app)",
         "settings.resetDefaults": "Reset to defaults",
+
+        "support.title": "Support MiniLink",
+        "support.hint": "Enjoying MiniLink? Buy the developer a coffee!",
+        "support.button": "☕ Buy me a coffee",
     ]
 
     static let zh: [String: String] = [
@@ -140,5 +144,9 @@ enum L10n {
         "settings.launchAtLogin": "开机自启动",
         "settings.launchFailed": "设置开机自启失败：%@\n（需要以 MiniLink.app 方式运行）",
         "settings.resetDefaults": "恢复默认设置",
+
+        "support.title": "支持 MiniLink",
+        "support.hint": "觉得 MiniLink 好用？请开发者喝杯咖啡吧！",
+        "support.button": "☕ 请我喝咖啡",
     ]
 }

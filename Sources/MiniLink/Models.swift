@@ -123,6 +123,10 @@ enum Defaults {
     ]
 
     static var commonScanPorts: [Int] { knownPortLabelsEn.keys.sorted() }
+
+    // 打赏链接（如 https://buymeacoffee.com/xxx 或 https://ko-fi.com/xxx）。
+    // 留空则界面上不显示打赏按钮。
+    static let donateURL = ""
 }
 
 @MainActor

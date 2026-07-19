@@ -76,6 +76,14 @@ open build/MiniLink.app     # 或拖进「应用程序」文件夹
 
 无头 Mac mini 家庭服务器 · 通过 Tailscale 远程访问自己的 Mac · 两台 Mac 之间雷雳网桥直连 · 监控跑 Ollama / LM Studio / ComfyUI 的机器 · 传大文件前先看哪条线路最快 · 快速查看自己的 Mac 对外暴露了哪些端口。
 
+## 支持一下 ☕
+
+MiniLink 免费开源。如果它帮你省了时间，欢迎请我喝杯咖啡，支持项目继续更新！
+
+<!-- TODO: 注册后把 YOUR_USERNAME 换成真实用户名，并删掉这行注释 -->
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-☕-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/YOUR_USERNAME)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support-FF5E5B?logo=kofi&logoColor=white)](https://ko-fi.com/YOUR_USERNAME)
+
 ## 许可证
 
 [MIT](LICENSE) © Ethan Tan

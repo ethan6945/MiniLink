@@ -69,6 +69,15 @@ struct MainView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
+            if !Defaults.donateURL.isEmpty {
+                Button("☕") {
+                    if let url = URL(string: Defaults.donateURL) {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
+                .buttonStyle(.borderless)
+                .help(settings.t("support.button"))
+            }
             Button(settings.t("footer.quit")) { NSApp.terminate(nil) }
                 .buttonStyle(.borderless)
                 .foregroundStyle(.secondary)
@@ -519,6 +528,21 @@ struct SettingsTab: View {
 
             Toggle(settings.t("settings.launchAtLogin"), isOn: $launchAtLogin)
                 .onChange(of: launchAtLogin) { _, on in setLaunchAtLogin(on) }
+
+            if !Defaults.donateURL.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(settings.t("support.title")).font(.headline)
+                    Text(settings.t("support.hint"))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Button(settings.t("support.button")) {
+                        if let url = URL(string: Defaults.donateURL) {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                    .controlSize(.small)
+                }
+            }
 
             HStack {
                 Button(settings.t("settings.resetDefaults")) { settings.resetDefaults() }
