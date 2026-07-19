@@ -196,8 +196,8 @@ final class StatusMonitor {
 @MainActor
 @Observable
 final class LocalInfo {
-    let username = NSUserName()
-    let fullName = NSFullUserName()
+    var username = NSUserName()
+    var fullName = NSFullUserName()
     var hostName: String = ProcessInfo.processInfo.hostName
 
     var ips: [LocalIP] = []

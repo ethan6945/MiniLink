@@ -35,7 +35,7 @@ struct MainView: View {
             ScrollView {
                 switch tab {
                 case .status:
-                    StatusTab(settings: settings, monitor: monitor, tab: $tab, alertMsg: $alertMsg)
+                    StatusTab(settings: settings, monitor: monitor, localInfo: localInfo, tab: $tab, alertMsg: $alertMsg)
                 case .ports:
                     PortsTab(settings: settings, monitor: monitor)
                 case .local:
@@ -100,13 +100,14 @@ struct MainView: View {
 struct StatusTab: View {
     @Bindable var settings: AppSettings
     var monitor: StatusMonitor
+    var localInfo: LocalInfo
     @Binding var tab: MainView.Tab
     @Binding var alertMsg: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(settings.f("status.greeting", NSUserName())).font(.title3.bold())
+                Text(settings.f("status.greeting", localInfo.username)).font(.title3.bold())
                 Text(settings.t("status.subtitle")).font(.caption).foregroundStyle(.secondary)
             }
 

@@ -15,10 +15,10 @@ func runSnapshotModeIfNeeded() {
     app.appearance = NSAppearance(named: .aqua)
 
     let settings = AppSettings()
-    settings.username = "ethan"
-    let lan = Route(name: "LAN", ip: "192.168.1.100", symbol: "network")
-    let ts = Route(name: "Tailscale", ip: "100.101.102.103", symbol: "point.3.filled.connected.trianglepath.dotted")
-    let tb = Route(name: "Thunderbolt", ip: "169.254.1.1", symbol: "bolt.fill")
+    settings.username = "alex"
+    let lan = Route(name: "LAN", ip: "192.168.0.50", symbol: "network")
+    let ts = Route(name: "Tailscale", ip: "100.80.90.100", symbol: "point.3.filled.connected.trianglepath.dotted")
+    let tb = Route(name: "Thunderbolt", ip: "169.254.100.2", symbol: "bolt.fill")
     settings.routes = [lan, ts, tb]
     let p22 = PortEntry(port: 22, label: "")
     let p445 = PortEntry(port: 445, label: "")
@@ -34,7 +34,7 @@ func runSnapshotModeIfNeeded() {
         tb.id: RouteStatus(reachable: true, latencyMs: 0.3),
     ]
     monitor.portStates = [p22.id: .open, p445.id: .open, p5900.id: .closed, p11434.id: .open]
-    monitor.mounts = [MountedShare(source: "//ethan@192.168.1.100/Media", mountPoint: "/Volumes/Media")]
+    monitor.mounts = [MountedShare(source: "//alex@192.168.0.50/Media", mountPoint: "/Volumes/Media")]
     monitor.lastRefresh = Date()
     monitor.scanResults = Defaults.commonScanPorts.map {
         ScanResult(port: $0, open: [22, 80, 445, 3000, 11434].contains($0))
@@ -42,11 +42,13 @@ func runSnapshotModeIfNeeded() {
 
     let localInfo = LocalInfo()
     localInfo.frozen = true
-    localInfo.hostName = "Ethans-MacBook-Air.local"
+    localInfo.username = "alex"
+    localInfo.fullName = "Alex Doe"
+    localInfo.hostName = "Alexs-MacBook-Air.local"
     localInfo.ips = [
-        LocalIP(iface: "en0", kind: "wifi", ip: "192.168.1.23"),
-        LocalIP(iface: "bridge0", kind: "thunderbolt", ip: "169.254.87.10"),
-        LocalIP(iface: "utun3", kind: "tailscale", ip: "100.64.0.12"),
+        LocalIP(iface: "en0", kind: "wifi", ip: "192.168.0.42"),
+        LocalIP(iface: "bridge0", kind: "thunderbolt", ip: "169.254.100.10"),
+        LocalIP(iface: "utun3", kind: "tailscale", ip: "100.80.90.101"),
     ]
     localInfo.listening = [
         ListeningPort(port: 22, addr: "*", process: ""),
