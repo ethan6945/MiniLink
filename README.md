@@ -53,7 +53,7 @@ MiniLink answers all of that at a glance from your menu bar — and connects you
 Build from source (requires Xcode Command Line Tools, macOS 14+):
 
 ```bash
-git clone https://github.com/Junxian0405/MiniLink.git
+git clone https://github.com/ethan6945/MiniLink.git
 cd MiniLink
 ./build.sh
 open build/MiniLink.app     # or drag it into /Applications
