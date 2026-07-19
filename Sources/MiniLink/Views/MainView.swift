@@ -7,8 +7,16 @@ struct MainView: View {
     var localInfo: LocalInfo
 
     enum Tab: Hashable { case status, ports, local, settings }
-    @State private var tab: Tab = .status
+    @State private var tab: Tab
     @State private var alertMsg: String?
+
+    init(settings: AppSettings, monitor: StatusMonitor, localInfo: LocalInfo, initialTab: Tab = .status) {
+        _settings = Bindable(settings)
+        self.monitor = monitor
+        self.localInfo = localInfo
+        _tab = State(initialValue: initialTab)
+        _alertMsg = State(initialValue: nil)
+    }
 
     var body: some View {
         VStack(spacing: 0) {

@@ -22,6 +22,15 @@
 
 ---
 
+<p align="center">
+  <img src="docs/screenshot-status.png" width="380" alt="状态页 — 各线路实时延迟与一键 SSH / SMB">
+</p>
+<p align="center">
+  <img src="docs/screenshot-ports.png" width="245" alt="端口监测与常用端口扫描">
+  <img src="docs/screenshot-local.png" width="245" alt="本机页 — 网卡 IP 与监听端口">
+  <img src="docs/screenshot-settings-zh.png" width="245" alt="中文设置页 — 双语界面">
+</p>
+
 ## 为什么做这个？
 
 如果你有一台**无头 Mac mini / Mac Studio** 当家庭服务器、编译机或 AI 主机，你多半在为同一台机器记好几个 IP：在家用局域网地址、在外面走 **Tailscale**、传大文件时插**雷雳线直连**。每次连接前都要想：*现在哪条线路通？雷雳线到底插没插好？SSH 开着吗？切了网络之后 SMB 挂载是不是卡死了？*

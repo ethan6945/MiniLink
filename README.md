@@ -22,6 +22,15 @@
 
 ---
 
+<p align="center">
+  <img src="docs/screenshot-status.png" width="380" alt="Status tab — live latency per route with one-click SSH and SMB">
+</p>
+<p align="center">
+  <img src="docs/screenshot-ports.png" width="245" alt="Port monitor and common port scan">
+  <img src="docs/screenshot-local.png" width="245" alt="This Mac — local IPs and listening ports">
+  <img src="docs/screenshot-settings-zh.png" width="245" alt="Settings tab in Chinese — bilingual UI">
+</p>
+
 ## Why?
 
 If you run a **headless Mac mini / Mac Studio** as a home server, build machine, or AI box, you probably juggle several IPs for the same machine: the LAN address at home, a **Tailscale** address when you're out, maybe a **Thunderbolt bridge** for fast file transfers. Before every connection you wonder: *which route is up right now? Is the Thunderbolt cable even plugged in? Is SSH running? Did my SMB mount go stale after switching networks?*

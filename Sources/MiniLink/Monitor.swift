@@ -107,8 +107,12 @@ final class StatusMonitor {
 
     private var loopTask: Task<Void, Never>?
 
-    init(settings: AppSettings) {
+    /// 截图模式下置 true：refreshAll 变为空操作，保持注入的演示数据不被真实探测覆盖
+    var frozen = false
+
+    init(settings: AppSettings, autostart: Bool = true) {
         self.settings = settings
+        guard autostart else { return }
         loopTask = Task { [weak self] in
             while !Task.isCancelled {
                 guard let self else { return }
@@ -134,6 +138,7 @@ final class StatusMonitor {
     var anyReachable: Bool { !reachableRoutes.isEmpty }
 
     func refreshAll() async {
+        guard !frozen else { return }
         let routes = settings.routes
         var newStatus: [UUID: RouteStatus] = [:]
         await withTaskGroup(of: (UUID, RouteStatus).self) { group in
@@ -193,13 +198,17 @@ final class StatusMonitor {
 final class LocalInfo {
     let username = NSUserName()
     let fullName = NSFullUserName()
-    var hostName: String { ProcessInfo.processInfo.hostName }
+    var hostName: String = ProcessInfo.processInfo.hostName
 
     var ips: [LocalIP] = []
     var listening: [ListeningPort] = []
     var loading = false
 
+    /// 截图模式下置 true：refresh 变为空操作
+    var frozen = false
+
     func refresh() async {
+        guard !frozen else { return }
         loading = true
         ips = Self.ipv4Interfaces()
         listening = await Self.listeningPorts()

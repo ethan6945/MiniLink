@@ -8,6 +8,7 @@ struct MiniLinkApp: App {
 
     init() {
         runCheckModeIfNeeded()
+        runSnapshotModeIfNeeded()
         let s = AppSettings()
         _settings = State(initialValue: s)
         _monitor = State(initialValue: StatusMonitor(settings: s))
