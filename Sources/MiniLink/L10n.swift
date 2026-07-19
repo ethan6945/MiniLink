@@ -29,7 +29,6 @@ enum L10n {
         "status.openInFinder": "Show in Finder",
         "status.eject": "Eject",
         "status.ejectFailed": "Eject failed: %@",
-        "status.needUsername": "Set your SSH username in Settings first",
         "status.terminalFailed": "Could not open Terminal: %@",
 
         "ports.title": "Remote port monitor",
@@ -60,7 +59,7 @@ enum L10n {
 
         "settings.usernameTitle": "SSH username",
         "settings.usernamePlaceholder": "Username on the remote Mac",
-        "settings.usernameHint": "Used to connect: ssh username@IP (SMB too)",
+        "settings.usernameHint": "Used to connect: ssh username@IP (SMB too). Defaults to this Mac's username.",
         "settings.intervalTitle": "Refresh interval: %d s",
         "settings.intervalHint": "Drops to ~20 s while the popover is closed, to save energy.",
         "settings.routesTitle": "Routes",
@@ -101,7 +100,6 @@ enum L10n {
         "status.openInFinder": "在访达中打开",
         "status.eject": "弹出",
         "status.ejectFailed": "弹出失败：%@",
-        "status.needUsername": "请先在「设置」里填写 SSH 用户名",
         "status.terminalFailed": "无法打开终端：%@",
 
         "ports.title": "远程端口监测",
@@ -132,7 +130,7 @@ enum L10n {
 
         "settings.usernameTitle": "SSH 用户名",
         "settings.usernamePlaceholder": "远程 Mac 上的用户名",
-        "settings.usernameHint": "连接时使用：ssh 用户名@IP，SMB 同理",
+        "settings.usernameHint": "连接时使用：ssh 用户名@IP，SMB 同理；默认自动填入本机用户名",
         "settings.intervalTitle": "刷新间隔：%d 秒",
         "settings.intervalHint": "弹窗关闭时自动降为约 20 秒一次，省电。",
         "settings.routesTitle": "线路",

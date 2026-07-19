@@ -156,9 +156,17 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(language.rawValue, forKey: Keys.language) }
     }
 
+    /// 当前生效的 SSH 用户名：设置里被清空时回退到本机用户名
+    var effectiveUsername: String {
+        let u = username.trimmingCharacters(in: .whitespaces)
+        return u.isEmpty ? NSUserName() : u
+    }
+
     init() {
         let d = UserDefaults.standard
-        username = d.string(forKey: Keys.username) ?? ""
+        // 首次启动自动填入本机用户名，用户可在设置里修改
+        let saved = d.string(forKey: Keys.username) ?? ""
+        username = saved.isEmpty ? NSUserName() : saved
         let iv = d.double(forKey: Keys.interval)
         refreshInterval = iv >= 2 ? iv : 5
         routes = Self.loadJSON([Route].self, key: Keys.routes) ?? Defaults.routes

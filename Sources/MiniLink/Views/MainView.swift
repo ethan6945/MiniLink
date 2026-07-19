@@ -35,7 +35,7 @@ struct MainView: View {
             ScrollView {
                 switch tab {
                 case .status:
-                    StatusTab(settings: settings, monitor: monitor, localInfo: localInfo, tab: $tab, alertMsg: $alertMsg)
+                    StatusTab(settings: settings, monitor: monitor, localInfo: localInfo, alertMsg: $alertMsg)
                 case .ports:
                     PortsTab(settings: settings, monitor: monitor)
                 case .local:
@@ -101,7 +101,6 @@ struct StatusTab: View {
     @Bindable var settings: AppSettings
     var monitor: StatusMonitor
     var localInfo: LocalInfo
-    @Binding var tab: MainView.Tab
     @Binding var alertMsg: String?
 
     var body: some View {
@@ -152,7 +151,7 @@ struct StatusTab: View {
                 Button("SSH") { sshTapped(route) }
                     .controlSize(.small)
                     .disabled(!reachable)
-                Button("SMB") { Actions.openSMB(username: settings.username, ip: route.ip) }
+                Button("SMB") { Actions.openSMB(username: settings.effectiveUsername, ip: route.ip) }
                     .controlSize(.small)
                     .disabled(!reachable)
             }
@@ -181,12 +180,7 @@ struct StatusTab: View {
     }
 
     private func sshTapped(_ route: Route) {
-        if settings.username.isEmpty {
-            tab = .settings
-            alertMsg = settings.t("status.needUsername")
-            return
-        }
-        if let err = Actions.openSSH(username: settings.username, ip: route.ip) {
+        if let err = Actions.openSSH(username: settings.effectiveUsername, ip: route.ip) {
             alertMsg = settings.f("status.terminalFailed", err)
         }
     }
