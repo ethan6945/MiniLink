@@ -99,9 +99,7 @@ Headless Mac mini home server · remote access to your Mac over Tailscale · Thu
 
 MiniLink is free and open source. If it saves you time, consider buying me a coffee — it keeps the project going!
 
-<!-- TODO: 注册后把 YOUR_USERNAME 换成真实用户名，并删掉这行注释 -->
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-☕-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/YOUR_USERNAME)
-[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support-FF5E5B?logo=kofi&logoColor=white)](https://ko-fi.com/YOUR_USERNAME)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-☕-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/ethan6945)
 
 ## License
 
