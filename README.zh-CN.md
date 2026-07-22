@@ -48,9 +48,17 @@ MiniLink 把这些答案放进菜单栏，一眼看清、一键连接。
 - 🌐 **中文 & English** — 设置里随时切换，也可跟随系统语言
 - 🪶 **原生轻量** — 纯 SwiftUI + Network.framework，无 Electron、零依赖、无遥测，所有数据只留在本机
 
-## 安装
+## 下载
 
-从源码构建（需要 Xcode Command Line Tools，macOS 14+）：
+直接下载打包好的 App，不需要 Xcode：
+
+1. 从[最新发布页](https://github.com/ethan6945/MiniLink/releases/latest)下载 **[MiniLink.zip](https://github.com/ethan6945/MiniLink/releases/latest/download/MiniLink.zip)**
+2. 解压后把 `MiniLink.app` 拖进「应用程序」文件夹
+3. 打开时 macOS 会提示"无法验证开发者"（应用是 ad-hoc 签名，未做苹果公证）——**右键点击 App → 打开**，确认一次就好，之后正常双击打开即可
+
+## 从源码构建
+
+需要 Xcode Command Line Tools，macOS 14+：
 
 ```bash
 git clone https://github.com/ethan6945/MiniLink.git

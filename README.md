@@ -48,9 +48,17 @@ MiniLink answers all of that at a glance from your menu bar — and connects you
 - 🌐 **English & 中文** — switchable in Settings, or follow the system language
 - 🪶 **Native & tiny** — pure SwiftUI + Network.framework, no Electron, no dependencies, no telemetry; everything stays on your machine
 
-## Install
+## Download
 
-Build from source (requires Xcode Command Line Tools, macOS 14+):
+Grab the prebuilt app — no Xcode needed:
+
+1. Download **[MiniLink.zip](https://github.com/ethan6945/MiniLink/releases/latest/download/MiniLink.zip)** from the [latest release](https://github.com/ethan6945/MiniLink/releases/latest)
+2. Unzip it, then drag `MiniLink.app` into **Applications**
+3. Open it. macOS will warn "unidentified developer" (the app is ad-hoc signed, not notarized) — **right-click the app → Open** to confirm once, then it launches normally from then on
+
+## Build from source
+
+Requires Xcode Command Line Tools, macOS 14+:
 
 ```bash
 git clone https://github.com/ethan6945/MiniLink.git
@@ -104,7 +112,3 @@ MiniLink is free and open source. If it saves you time, consider buying me a cof
 ## License
 
 [MIT](LICENSE) © Ethan Tan
-
----
-
-<sub>Keywords: macOS menu bar app, remote Mac, Mac mini server, SSH launcher, SMB mount manager, Tailscale status, Thunderbolt bridge, network latency monitor, port scanner, homelab, SwiftUI.</sub>
