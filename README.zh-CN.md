@@ -14,6 +14,8 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/ethan6945/MiniLink/releases/latest"><img src="https://img.shields.io/github/v/release/ethan6945/MiniLink?color=2ea44f" alt="最新版本"></a>
+  <img src="https://img.shields.io/github/downloads/ethan6945/MiniLink/total?color=blue" alt="下载量">
   <img src="https://img.shields.io/badge/platform-macOS%2014%2B-blue" alt="platform">
   <img src="https://img.shields.io/badge/swift-5.9%2B-orange" alt="swift">
   <img src="https://img.shields.io/badge/UI-SwiftUI-green" alt="swiftui">
@@ -39,8 +41,9 @@ MiniLink 把这些答案放进菜单栏，一眼看清、一键连接。
 
 ## 功能
 
-- 🚦 **多线路状态** — 给同一台机器定义任意多条线路（局域网 / Tailscale / 雷雳 / VPN…），每条实时显示连通状态灯和 **ping 延迟**，最快的线路带「最快」标记
+- 🚦 **多线路状态** — 给同一台机器定义任意多条线路（局域网 / Tailscale / 雷雳 / VPN…），每条实时显示连通状态灯、**ping 延迟**，以及该线路的 **SSH 是否真的通**，最快的线路带「最快」标记
 - ⚡ **一键连接** — `SSH` 打开终端执行 `ssh 用户名@IP`；`SMB` 在访达中挂载共享（凭据走钥匙串）
+- 🔄 **入站连接状态** — 一眼看到对方（或任何人）**正连着你这台 Mac**，走的哪条线路、连的什么服务（SSH / SMB / VNC…）——盯家里的无头服务器特别有用
 - 🔌 **端口监测** — 盯住你关心的端口（SSH 22、SMB 445、屏幕共享 5900 或自己的服务），经由最快线路实时探测开放/关闭
 - 🔍 **常用端口扫描** — 一键扫描 ~26 个常用端口（SSH、SMB、AFP、VNC、**Ollama、LM Studio、ComfyUI、Jupyter**、开发服务…），发现开放的可直接加入监测列表
 - 💾 **SMB 挂载管理** — 显示当前已挂载的共享，**一键弹出**（告别切网后访达卡死）

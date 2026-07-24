@@ -14,6 +14,8 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/ethan6945/MiniLink/releases/latest"><img src="https://img.shields.io/github/v/release/ethan6945/MiniLink?color=2ea44f" alt="latest release"></a>
+  <img src="https://img.shields.io/github/downloads/ethan6945/MiniLink/total?color=blue" alt="total downloads">
   <img src="https://img.shields.io/badge/platform-macOS%2014%2B-blue" alt="platform">
   <img src="https://img.shields.io/badge/swift-5.9%2B-orange" alt="swift">
   <img src="https://img.shields.io/badge/UI-SwiftUI-green" alt="swiftui">
@@ -39,8 +41,9 @@ MiniLink answers all of that at a glance from your menu bar — and connects you
 
 ## Features
 
-- 🚦 **Multi-route status** — define any number of routes (LAN / Tailscale / Thunderbolt / VPN / …) to the same machine; each shows a live reachability dot and **ping latency**, with the fastest route badged
+- 🚦 **Multi-route status** — define any number of routes (LAN / Tailscale / Thunderbolt / VPN / …) to the same machine; each shows a live reachability dot, **ping latency**, and whether **SSH is actually up** on that route, with the fastest route badged
 - ⚡ **One-click connect** — `SSH` opens Terminal with `ssh user@ip`; `SMB` mounts the share in Finder (credentials come from your Keychain)
+- 🔄 **Inbound connection status** — see when the remote Mac (or anyone) is connected *to this machine* and on which service (SSH / SMB / VNC …), tagged to the route it came in on — handy for keeping an eye on a headless server
 - 🔌 **Port monitor** — watch the ports you care about (SSH 22, SMB 445, VNC 5900, or your own services) and see open/closed live, probed via the fastest reachable route
 - 🔍 **Common port scan** — one click scans ~26 well-known ports (SSH, SMB, AFP, VNC, **Ollama, LM Studio, ComfyUI, Jupyter**, dev servers…) and lets you add discovered ports to the monitor list
 - 💾 **SMB mount manager** — see currently mounted shares and **eject them in one click** (no more Finder hanging on a stale mount after a network switch)
