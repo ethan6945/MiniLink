@@ -16,6 +16,8 @@ struct PortEntry: Identifiable, Codable, Equatable, Sendable {
 struct RouteStatus: Equatable, Sendable {
     var reachable = false
     var latencyMs: Double?
+    var sshOpen: Bool? = nil       // 22 端口 TCP 是否可连；nil=未探测
+    var inboundPorts: [Int] = []   // 对方（此路由 IP）已连到本机的监听端口；非空=对方在连你
 }
 
 enum PortState: Sendable {

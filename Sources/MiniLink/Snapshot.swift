@@ -29,9 +29,9 @@ func runSnapshotModeIfNeeded() {
     let monitor = StatusMonitor(settings: settings, autostart: false)
     monitor.frozen = true
     monitor.routeStatus = [
-        lan.id: RouteStatus(reachable: true, latencyMs: 0.6),
-        ts.id: RouteStatus(reachable: true, latencyMs: 14.2),
-        tb.id: RouteStatus(reachable: true, latencyMs: 0.3),
+        lan.id: RouteStatus(reachable: true, latencyMs: 0.6, sshOpen: true, inboundPorts: [22]),
+        ts.id: RouteStatus(reachable: true, latencyMs: 14.2, sshOpen: true),
+        tb.id: RouteStatus(reachable: true, latencyMs: 0.3, sshOpen: false),
     ]
     monitor.portStates = [p22.id: .open, p445.id: .open, p5900.id: .closed, p11434.id: .open]
     monitor.mounts = [MountedShare(source: "//alex@192.168.0.50/Media", mountPoint: "/Volumes/Media")]

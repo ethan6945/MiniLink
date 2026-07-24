@@ -84,6 +84,35 @@ func currentSMBMounts() async -> [MountedShare] {
     }
 }
 
+/// 检测「对方连着我」的入站连接。一次 netstat 同时拿本机监听端口和建立态连接，
+/// 只保留「对方连到本机某个监听端口」的连接——这样能区分「对方连我」与「我连对方」
+/// （我主动外连时本机端口是临时端口，不在监听集合里，会被排除）。
+/// 返回：对方 IP -> 该 IP 连到本机的监听端口列表（升序）。
+func establishedInbound() async -> [String: [Int]] {
+    let (_, out) = await runProcess("/usr/sbin/netstat", ["-an", "-p", "tcp"])
+    var listen = Set<Int>()
+    var estab: [(fip: String, lport: Int)] = []
+    for line in out.split(separator: "\n") where line.hasPrefix("tcp") {
+        let cols = line.split(separator: " ", omittingEmptySubsequences: true)
+        guard cols.count >= 4 else { continue }
+        let local = String(cols[3]) // 本机 ip.port，如 192.168.1.50.22 或 *.22
+        guard let d = local.lastIndex(of: "."),
+              let lport = Int(local[local.index(after: d)...]) else { continue }
+        if line.contains("LISTEN") {
+            listen.insert(lport)
+        } else if line.contains("ESTABLISHED"), cols.count >= 5 {
+            let foreign = String(cols[4]) // 对方 ip.port
+            guard let fd = foreign.lastIndex(of: ".") else { continue }
+            estab.append((String(foreign[..<fd]), lport))
+        }
+    }
+    var map: [String: Set<Int>] = [:]
+    for e in estab where listen.contains(e.lport) {
+        map[e.fip, default: []].insert(e.lport)
+    }
+    return map.mapValues { $0.sorted() }
+}
+
 // MARK: - mini 状态监测
 
 @MainActor
@@ -140,16 +169,23 @@ final class StatusMonitor {
     func refreshAll() async {
         guard !frozen else { return }
         let routes = settings.routes
+        // 与逐路由探测并发跑一次 netstat，拿到所有入站连接
+        async let inboundMap = establishedInbound()
         var newStatus: [UUID: RouteStatus] = [:]
         await withTaskGroup(of: (UUID, RouteStatus).self) { group in
             for r in routes {
                 group.addTask {
-                    let st = await pingHost(r.ip)
+                    async let ping = pingHost(r.ip)
+                    async let ssh = probePort(host: r.ip, port: 22) // SSH 是否通
+                    var st = await ping
+                    st.sshOpen = await ssh
                     return (r.id, st)
                 }
             }
             for await (id, st) in group { newStatus[id] = st }
         }
+        let inbound = await inboundMap
+        for r in routes { newStatus[r.id]?.inboundPorts = inbound[r.ip] ?? [] }
         routeStatus = newStatus
 
         if let host = bestRoute?.ip {

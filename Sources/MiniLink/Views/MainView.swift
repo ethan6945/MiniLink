@@ -139,6 +139,9 @@ struct StatusTab: View {
                         .background(Capsule().fill(Color.green.opacity(0.18)))
                         .foregroundStyle(.green)
                 }
+                if let ports = st?.inboundPorts, !ports.isEmpty {
+                    peerBadge(ports)
+                }
                 Spacer()
                 statusView(st)
             }
@@ -148,6 +151,7 @@ struct StatusTab: View {
                     .foregroundStyle(.secondary)
                     .textSelection(.enabled)
                 Spacer()
+                sshDot(st?.sshOpen)
                 Button("SSH") { sshTapped(route) }
                     .controlSize(.small)
                     .disabled(!reachable)
@@ -158,6 +162,33 @@ struct StatusTab: View {
         }
         .padding(10)
         .background(RoundedRectangle(cornerRadius: 8).fill(.quaternary.opacity(0.5)))
+    }
+
+    /// SSH（22 端口）可达指示点：绿=通、红=不通、灰=未探测。紧挨 SSH 按钮，作其状态注解。
+    private func sshDot(_ open: Bool?) -> some View {
+        let color: Color = open == nil ? Color.secondary.opacity(0.4) : (open! ? .green : .red)
+        let help = open == false ? settings.t("status.sshUnreachable") : settings.t("status.sshReachable")
+        return Circle()
+            .fill(color)
+            .frame(width: 7, height: 7)
+            .help(open == nil ? "" : help)
+    }
+
+    /// 「对方在连」徽章：对方（此路由 IP）正连着本机的监听端口。徽章显示端口号，
+    /// 悬停提示给出服务名。出现在哪条路由卡上，就说明对方走的是哪条路径。
+    private func peerBadge(_ ports: [Int]) -> some View {
+        let portsText = ports.map(String.init).joined(separator: ", ")
+        let services = ports.map { settings.portLabel($0) ?? "\($0)" }.joined(separator: ", ")
+        return HStack(spacing: 3) {
+            Image(systemName: "arrow.down.left")
+            Text("\(settings.t("status.peerConnected")) · \(portsText)")
+        }
+        .font(.caption2)
+        .padding(.horizontal, 5)
+        .padding(.vertical, 1)
+        .background(Capsule().fill(Color.blue.opacity(0.18)))
+        .foregroundStyle(.blue)
+        .help(settings.f("status.peerConnectedHelp", services))
     }
 
     private func statusView(_ st: RouteStatus?) -> some View {

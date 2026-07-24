@@ -30,6 +30,10 @@ enum L10n {
         "status.eject": "Eject",
         "status.ejectFailed": "Eject failed: %@",
         "status.terminalFailed": "Could not open Terminal: %@",
+        "status.sshReachable": "SSH reachable (port 22 open)",
+        "status.sshUnreachable": "SSH not responding (port 22 closed)",
+        "status.peerConnected": "Peer connected",
+        "status.peerConnectedHelp": "The remote is connected to your: %@",
 
         "ports.title": "Remote port monitor",
         "ports.via": "via %@",
@@ -101,6 +105,10 @@ enum L10n {
         "status.eject": "弹出",
         "status.ejectFailed": "弹出失败：%@",
         "status.terminalFailed": "无法打开终端：%@",
+        "status.sshReachable": "SSH 可连（22 端口开放）",
+        "status.sshUnreachable": "SSH 未响应（22 端口不通）",
+        "status.peerConnected": "对方在连",
+        "status.peerConnectedHelp": "对方正连接你的：%@",
 
         "ports.title": "远程端口监测",
         "ports.via": "经由 %@",
