@@ -243,21 +243,20 @@ struct StatusTab: View {
                 performanceRow(
                     title: settings.t("status.processorLoad"),
                     icon: "cpu",
-                    value: String(format: "%.0f%%", performance.processorLoad),
                     fraction: performance.processorLoad / 100,
-                    tint: .blue
+                    tint: .blue,
+                    percentText: String(format: "%.0f%%", performance.processorLoad)
                 )
                 performanceRow(
                     title: settings.t("status.ramUsage"),
                     icon: "memorychip",
-                    value: settings.f(
-                        "status.ramValue",
-                        Int((performance.memoryUsage * 100).rounded()),
-                        Self.byteString(performance.memoryUsedBytes),
-                        Self.byteString(performance.memoryTotalBytes)
-                    ),
                     fraction: performance.memoryUsage,
-                    tint: .purple
+                    tint: .purple,
+                    barLabel: Self.memoryBarLabel(
+                        used: performance.memoryUsedBytes,
+                        total: performance.memoryTotalBytes
+                    ),
+                    percentText: String(format: "%.0f%%", (performance.memoryUsage * 100).rounded())
                 )
             case .unavailable(let reason):
                 if reason == .sshAccessRequired {
@@ -285,9 +284,10 @@ struct StatusTab: View {
     private func performanceRow(
         title: String,
         icon: String,
-        value: String,
         fraction: Double,
-        tint: Color
+        tint: Color,
+        barLabel: String? = nil,
+        percentText: String
     ) -> some View {
         HStack(spacing: 7) {
             Image(systemName: icon)
@@ -296,13 +296,37 @@ struct StatusTab: View {
             Text(title)
                 .font(.caption)
                 .frame(width: 82, alignment: .leading)
-            ProgressView(value: min(max(fraction, 0), 1))
-                .tint(tint)
-            Text(value)
+            performanceBar(fraction: fraction, tint: tint, label: barLabel)
+            Text(percentText)
                 .font(.caption2.monospacedDigit())
                 .foregroundStyle(.secondary)
-                .frame(minWidth: 42, alignment: .trailing)
+                .frame(minWidth: 34, alignment: .trailing)
         }
+    }
+
+    /// 进度条：底色轨道 + 按占比填充；可在条内居中叠一行绝对值（如 “10 / 16 GB”）。
+    private func performanceBar(fraction: Double, tint: Color, label: String?) -> some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(tint.opacity(0.15))
+                Capsule()
+                    .fill(tint.opacity(0.55))
+                    .frame(width: geo.size.width * min(max(fraction, 0), 1))
+                if let label {
+                    Text(label)
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(.primary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
+            }
+        }
+        .frame(height: 16)
+        .clipShape(Capsule())
+    }
+
+    private static func memoryBarLabel(used: UInt64, total: UInt64) -> String {
+        let gb = 1_073_741_824.0
+        return String(format: "%.0f / %.0f GB", Double(used) / gb, Double(total) / gb)
     }
 
     private func performanceUnavailableText(_ reason: RemotePerformanceUnavailableReason) -> String {
