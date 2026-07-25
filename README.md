@@ -44,6 +44,7 @@ MiniLink answers all of that at a glance from your menu bar — and connects you
 - 🚦 **Multi-route status** — define any number of routes (LAN / Tailscale / Thunderbolt / VPN / …) to the same machine; each shows a live reachability dot, **ping latency**, and whether **SSH is actually up** on that route, with the fastest route badged
 - ⚡ **One-click connect** — `SSH` opens Terminal with `ssh user@ip`; `SMB` mounts the share in Finder (credentials come from your Keychain)
 - 🔄 **Inbound connection status** — see when the remote Mac (or anyone) is connected *to this machine* and on which service (SSH / SMB / VNC …), tagged to the route it came in on — handy for keeping an eye on a headless server
+- 📊 **Remote performance** — see live processor load and RAM usage from the remote Mac over SSH; if needed, click the warning to create and install a dedicated MiniLink public key
 - 🔌 **Port monitor** — watch the ports you care about (SSH 22, SMB 445, VNC 5900, or your own services) and see open/closed live, probed via the fastest reachable route
 - 🔍 **Common port scan** — one click scans ~26 well-known ports (SSH, SMB, AFP, VNC, **Ollama, LM Studio, ComfyUI, Jupyter**, dev servers…) and lets you add discovered ports to the monitor list
 - 💾 **SMB mount manager** — see currently mounted shares and **eject them in one click** (no more Finder hanging on a stale mount after a network switch)
@@ -97,6 +98,7 @@ Thunderbolt 169.254.1.1: unreachable
 ## How it works
 
 - **Latency**: one ICMP ping per route per refresh (`/sbin/ping` subprocess) — no special privileges needed
+- **Remote performance**: one non-interactive SSH command reads macOS `top` and `sysctl` through the fastest SSH-capable route
 - **Port probes**: TCP handshake via `Network.framework` `NWConnection` with a 2 s timeout
 - **Local ports**: `netstat` for the complete listener list, `lsof` to annotate process names
 - **Mounts**: parsed from `mount`, ejected via `NSWorkspace`
