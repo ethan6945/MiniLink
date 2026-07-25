@@ -293,15 +293,19 @@ final class StatusMonitor: ObservableObject {
                     (newStatus[$0.id]?.latencyMs ?? .infinity)
                         < (newStatus[$1.id]?.latencyMs ?? .infinity)
                 }
-            if case .available = remotePerformanceStatus {
-                // 刷新时保留上次读数，避免进度条闪回“读取中”。
-            } else {
-                remotePerformanceStatus = .checking
-            }
             performanceRouteID = performanceRoute?.id ?? route.id
             let canReadPerformance = performanceRoute != nil
+            // 仅在弹窗打开时读取远端性能：关闭时没人看，不必每次刷新都发起一次 SSH。
+            let readPerformance = windowOpen && canReadPerformance
+            if windowOpen {
+                if case .available = remotePerformanceStatus {
+                    // 刷新时保留上次读数，避免进度条闪回“读取中”。
+                } else {
+                    remotePerformanceStatus = .checking
+                }
+            }
             async let performance = remotePerformanceIfAvailable(
-                canReadPerformance,
+                readPerformance,
                 username: settings.effectiveUsername,
                 host: performanceRoute?.ip ?? route.ip
             )
@@ -315,15 +319,15 @@ final class StatusMonitor: ObservableObject {
                 for await (id, open) in group { states[id] = open ? .open : .closed }
             }
             portStates = states
-            if canReadPerformance {
-                if let metrics = await performance {
-                    remotePerformanceStatus = .available(metrics)
+            let metrics = await performance
+            if windowOpen {
+                if canReadPerformance {
+                    remotePerformanceStatus = metrics.map { .available($0) } ?? .unavailable(.sshAccessRequired)
                 } else {
-                    remotePerformanceStatus = .unavailable(.sshAccessRequired)
+                    remotePerformanceStatus = .unavailable(.sshUnavailable)
                 }
-            } else {
-                remotePerformanceStatus = .unavailable(.sshUnavailable)
             }
+            // 弹窗关闭时保留上次读数，不改状态
         } else {
             portStates = [:]
             performanceRouteID = nil
