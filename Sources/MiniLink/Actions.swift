@@ -2,20 +2,47 @@ import AppKit
 
 @MainActor
 enum Actions {
-    /// 所有路由都是同一台远程 Mac，host key 其实相同。用固定 HostKeyAlias 让它们
-    /// 共用同一条 known_hosts 记录：接受一次后，无论走哪条路由、IP 怎么变都不再问。
-    private static let hostKeyAlias = "minilink-remote"
-
     /// 打开终端执行 ssh。返回错误信息，成功返回 nil。
     static func openSSH(username: String, ip: String) -> String? {
         // accept-new：首次/换 IP 自动信任、不再弹 yes（密钥“真的变了”仍会拦截告警）
         // ConnectTimeout：掉线路由快速失败，不卡住
-        let opts = "-o StrictHostKeyChecking=accept-new -o ConnectTimeout=8 -o HostKeyAlias=\(hostKeyAlias)"
-        let cmd = "ssh \(opts) \(username)@\(ip)"
+        let opts = "-o StrictHostKeyChecking=accept-new -o ConnectTimeout=8 -o HostKeyAlias=\(Defaults.sshHostKeyAlias)"
+        let cmd = "/usr/bin/ssh \(opts) \(shellQuoted("\(username)@\(ip)"))"
+        return runInTerminal(cmd)
+    }
+
+    /// 创建 MiniLink 专用密钥，并通过一次交互式密码登录把公钥加入远端。
+    /// 私钥始终只保存在本机 ~/.ssh；传到远端的只有公钥。
+    static func setupSSHKey(
+        username: String,
+        ip: String,
+        successMessage: String
+    ) -> String? {
+        let target = shellQuoted("\(username)@\(ip)")
+        let copyOptions = """
+        -o StrictHostKeyChecking=accept-new \
+        -o ConnectTimeout=8 \
+        -o HostKeyAlias=\(Defaults.sshHostKeyAlias) \
+        -o IdentitiesOnly=yes
+        """
+        let script = """
+        KEY="$HOME/.ssh/minilink_ed25519"; \
+        mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh" && \
+        { test -f "$KEY" || /usr/bin/ssh-keygen -q -t ed25519 -N '' -C MiniLink -f "$KEY"; } && \
+        /usr/bin/ssh-copy-id -i "$KEY.pub" \(copyOptions) \(target) && \
+        /usr/bin/printf '\\n%s\\n' \(shellQuoted(successMessage))
+        """
+        return runInTerminal(script)
+    }
+
+    private static func runInTerminal(_ command: String) -> String? {
+        let escaped = command
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
         let script = """
         tell application "Terminal"
             activate
-            do script "\(cmd)"
+            do script "\(escaped)"
         end tell
         """
         var errorDict: NSDictionary?
@@ -24,6 +51,10 @@ enum Actions {
             return e[NSAppleScript.errorMessage] as? String ?? "AppleScript 执行失败"
         }
         return nil
+    }
+
+    private static func shellQuoted(_ value: String) -> String {
+        "'\(value.replacingOccurrences(of: "'", with: "'\\''"))'"
     }
 
     static func openSMB(username: String, ip: String) {

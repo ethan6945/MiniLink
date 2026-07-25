@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 struct Route: Identifiable, Codable, Equatable, Sendable {
     var id = UUID()
@@ -18,6 +19,29 @@ struct RouteStatus: Equatable, Sendable {
     var latencyMs: Double?
     var sshOpen: Bool? = nil       // 22 端口 TCP 是否可连；nil=未探测
     var inboundPorts: [Int] = []   // 对方（此路由 IP）已连到本机的监听端口；非空=对方在连你
+}
+
+struct RemotePerformance: Equatable, Sendable {
+    var processorLoad: Double
+    var memoryUsedBytes: UInt64
+    var memoryTotalBytes: UInt64
+
+    var memoryUsage: Double {
+        guard memoryTotalBytes > 0 else { return 0 }
+        return min(max(Double(memoryUsedBytes) / Double(memoryTotalBytes), 0), 1)
+    }
+}
+
+enum RemotePerformanceUnavailableReason: Equatable, Sendable {
+    case hostUnreachable
+    case sshUnavailable
+    case sshAccessRequired
+}
+
+enum RemotePerformanceStatus: Equatable, Sendable {
+    case checking
+    case available(RemotePerformance)
+    case unavailable(RemotePerformanceUnavailableReason)
 }
 
 enum PortState: Sendable {
@@ -52,6 +76,9 @@ struct ListeningPort: Identifiable, Sendable {
 }
 
 enum Defaults {
+    /// 同一台远端 Mac 的不同线路共用 host key，避免每个 IP 分别确认。
+    static let sshHostKeyAlias = "minilink-remote"
+
     // 示例 IP，首次使用请在「设置」里改成自己的
     static let routes: [Route] = [
         Route(name: "LAN", ip: "192.168.1.100", symbol: "network"),
@@ -132,8 +159,7 @@ enum Defaults {
 }
 
 @MainActor
-@Observable
-final class AppSettings {
+final class AppSettings: ObservableObject {
     nonisolated enum Keys {
         static let username = "sshUsername"
         static let interval = "refreshInterval"
@@ -142,19 +168,19 @@ final class AppSettings {
         static let language = "language"
     }
 
-    var username: String {
+    @Published var username: String {
         didSet { UserDefaults.standard.set(username, forKey: Keys.username) }
     }
-    var refreshInterval: Double {
+    @Published var refreshInterval: Double {
         didSet { UserDefaults.standard.set(refreshInterval, forKey: Keys.interval) }
     }
-    var routes: [Route] {
+    @Published var routes: [Route] {
         didSet { Self.saveJSON(routes, key: Keys.routes) }
     }
-    var ports: [PortEntry] {
+    @Published var ports: [PortEntry] {
         didSet { Self.saveJSON(ports, key: Keys.ports) }
     }
-    var language: Language {
+    @Published var language: Language {
         didSet { UserDefaults.standard.set(language.rawValue, forKey: Keys.language) }
     }
 

@@ -2,18 +2,18 @@ import SwiftUI
 import ServiceManagement
 
 struct MainView: View {
-    @Bindable var settings: AppSettings
-    var monitor: StatusMonitor
-    var localInfo: LocalInfo
+    @ObservedObject var settings: AppSettings
+    @ObservedObject var monitor: StatusMonitor
+    @ObservedObject var localInfo: LocalInfo
 
     enum Tab: Hashable { case status, ports, local, settings }
     @State private var tab: Tab
     @State private var alertMsg: String?
 
     init(settings: AppSettings, monitor: StatusMonitor, localInfo: LocalInfo, initialTab: Tab = .status) {
-        _settings = Bindable(settings)
-        self.monitor = monitor
-        self.localInfo = localInfo
+        _settings = ObservedObject(wrappedValue: settings)
+        _monitor = ObservedObject(wrappedValue: monitor)
+        _localInfo = ObservedObject(wrappedValue: localInfo)
         _tab = State(initialValue: initialTab)
         _alertMsg = State(initialValue: nil)
     }
@@ -98,9 +98,9 @@ struct MainView: View {
 // MARK: - Tab 1 状态
 
 struct StatusTab: View {
-    @Bindable var settings: AppSettings
-    var monitor: StatusMonitor
-    var localInfo: LocalInfo
+    @ObservedObject var settings: AppSettings
+    @ObservedObject var monitor: StatusMonitor
+    @ObservedObject var localInfo: LocalInfo
     @Binding var alertMsg: String?
 
     var body: some View {
@@ -113,6 +113,8 @@ struct StatusTab: View {
             ForEach(settings.routes) { route in
                 routeCard(route)
             }
+
+            remotePerformanceCard
 
             if !monitor.mounts.isEmpty {
                 mountsSection
@@ -216,6 +218,126 @@ struct StatusTab: View {
         }
     }
 
+    private var remotePerformanceCard: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            HStack {
+                Label(settings.t("status.performanceTitle"), systemImage: "gauge.with.dots.needle.50percent")
+                    .font(.callout.weight(.semibold))
+                Spacer()
+                if let route = settings.routes.first(where: { $0.id == monitor.performanceRouteID }) {
+                    Text(settings.f("ports.via", route.name))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            switch monitor.remotePerformanceStatus {
+            case .checking:
+                HStack(spacing: 7) {
+                    ProgressView().controlSize(.small)
+                    Text(settings.t("status.performanceChecking"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            case .available(let performance):
+                performanceRow(
+                    title: settings.t("status.processorLoad"),
+                    icon: "cpu",
+                    value: String(format: "%.0f%%", performance.processorLoad),
+                    fraction: performance.processorLoad / 100,
+                    tint: .blue
+                )
+                performanceRow(
+                    title: settings.t("status.ramUsage"),
+                    icon: "memorychip",
+                    value: settings.f(
+                        "status.ramValue",
+                        Int((performance.memoryUsage * 100).rounded()),
+                        Self.byteString(performance.memoryUsedBytes),
+                        Self.byteString(performance.memoryTotalBytes)
+                    ),
+                    fraction: performance.memoryUsage,
+                    tint: .purple
+                )
+            case .unavailable(let reason):
+                if reason == .sshAccessRequired {
+                    Button {
+                        setupPerformanceSSHKey()
+                    } label: {
+                        Label(settings.t("status.performanceSSHSetup"), systemImage: "key.fill")
+                            .font(.caption)
+                            .foregroundStyle(Color.accentColor)
+                    }
+                    .buttonStyle(.plain)
+                    .contentShape(Rectangle())
+                    .help(settings.t("status.performanceSSHSetupHelp"))
+                } else {
+                    Label(performanceUnavailableText(reason), systemImage: "exclamationmark.circle")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 8).fill(.quaternary.opacity(0.5)))
+    }
+
+    private func performanceRow(
+        title: String,
+        icon: String,
+        value: String,
+        fraction: Double,
+        tint: Color
+    ) -> some View {
+        HStack(spacing: 7) {
+            Image(systemName: icon)
+                .foregroundStyle(tint)
+                .frame(width: 16)
+            Text(title)
+                .font(.caption)
+                .frame(width: 82, alignment: .leading)
+            ProgressView(value: min(max(fraction, 0), 1))
+                .tint(tint)
+            Text(value)
+                .font(.caption2.monospacedDigit())
+                .foregroundStyle(.secondary)
+                .frame(minWidth: 42, alignment: .trailing)
+        }
+    }
+
+    private func performanceUnavailableText(_ reason: RemotePerformanceUnavailableReason) -> String {
+        switch reason {
+        case .hostUnreachable:
+            return settings.t("status.performanceHostDown")
+        case .sshUnavailable:
+            return settings.t("status.performanceSSHDown")
+        case .sshAccessRequired:
+            return settings.t("status.performanceSSHAccess")
+        }
+    }
+
+    private func setupPerformanceSSHKey() {
+        guard let route = settings.routes.first(where: { $0.id == monitor.performanceRouteID }) else {
+            return
+        }
+        if let err = Actions.setupSSHKey(
+            username: settings.effectiveUsername,
+            ip: route.ip,
+            successMessage: settings.t("status.performanceSetupComplete")
+        ) {
+            alertMsg = settings.f("status.terminalFailed", err)
+        }
+    }
+
+    private static func byteString(_ bytes: UInt64) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useGB, .useMB]
+        formatter.countStyle = .memory
+        formatter.includesUnit = true
+        formatter.isAdaptive = true
+        return formatter.string(fromByteCount: Int64(clamping: bytes))
+    }
+
     private var mountsSection: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(settings.t("status.mounted")).font(.caption).foregroundStyle(.secondary)
@@ -261,8 +383,8 @@ struct StatusTab: View {
 // MARK: - Tab 2 端口
 
 struct PortsTab: View {
-    @Bindable var settings: AppSettings
-    var monitor: StatusMonitor
+    @ObservedObject var settings: AppSettings
+    @ObservedObject var monitor: StatusMonitor
     @State private var newPort = ""
     @State private var newLabel = ""
 
@@ -403,8 +525,8 @@ struct PortsTab: View {
 // MARK: - Tab 3 本机
 
 struct LocalTab: View {
-    var settings: AppSettings
-    var localInfo: LocalInfo
+    @ObservedObject var settings: AppSettings
+    @ObservedObject var localInfo: LocalInfo
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -497,7 +619,7 @@ struct LocalTab: View {
 // MARK: - Tab 4 设置
 
 struct SettingsTab: View {
-    @Bindable var settings: AppSettings
+    @ObservedObject var settings: AppSettings
     @Binding var alertMsg: String?
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
 

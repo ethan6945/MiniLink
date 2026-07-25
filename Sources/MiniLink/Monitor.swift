@@ -1,6 +1,12 @@
 import Foundation
 import Network
 import Darwin
+import CoreWLAN
+import Combine
+
+/// 本机 Wi-Fi 网卡的 BSD 名（笔记本通常 en0；Mac mini / Studio 因有内建以太网通常是 en1）。
+/// 用 CoreWLAN 动态获取，避免把 Wi-Fi 写死成某个固定的 enX。惰性求值、只算一次。
+private let wifiBSDName: String? = CWWiFiClient.shared().interface()?.interfaceName
 
 // MARK: - 底层探测工具
 
@@ -69,6 +75,95 @@ func probePort(host: String, port: UInt16, timeoutMs: Int = 2000) async -> Bool 
     }
 }
 
+/// 通过非交互 SSH 读取远端 macOS 的 CPU 与内存占用。
+/// BatchMode 可确保没有配置密钥登录时立即失败，而不是弹密码提示或挂起后台刷新。
+func remotePerformance(username: String, host: String) async -> RemotePerformance? {
+    let target = "\(username)@\(host)"
+    let command = """
+    printf 'MEMTOTAL='; /usr/sbin/sysctl -n hw.memsize; \
+    LC_ALL=C /usr/bin/top -l 1 -n 0 | /usr/bin/grep -E '^(CPU usage|PhysMem):'
+    """
+    var arguments = [
+        "-o", "BatchMode=yes",
+        "-o", "StrictHostKeyChecking=accept-new",
+        "-o", "HostKeyAlias=\(Defaults.sshHostKeyAlias)",
+        "-o", "ConnectTimeout=3",
+        "-o", "ConnectionAttempts=1",
+        "-o", "ServerAliveInterval=2",
+        "-o", "ServerAliveCountMax=1",
+    ]
+    let miniLinkKey = (NSHomeDirectory() as NSString)
+        .appendingPathComponent(".ssh/minilink_ed25519")
+    if FileManager.default.fileExists(atPath: miniLinkKey) {
+        arguments += ["-i", miniLinkKey, "-o", "IdentitiesOnly=yes"]
+    }
+    arguments += [target, command]
+    let result = await runProcess("/usr/bin/ssh", arguments)
+    guard result.status == 0 else { return nil }
+    return parseRemotePerformance(result.output)
+}
+
+private func remotePerformanceIfAvailable(
+    _ available: Bool,
+    username: String,
+    host: String
+) async -> RemotePerformance? {
+    guard available else { return nil }
+    return await remotePerformance(username: username, host: host)
+}
+
+/// 解析 macOS `top` 的稳定英文标签；独立成纯函数，便于用样本输出验证边界情况。
+func parseRemotePerformance(_ output: String) -> RemotePerformance? {
+    let lines = output.split(separator: "\n").map(String.init)
+    guard
+        let totalLine = lines.first(where: { $0.hasPrefix("MEMTOTAL=") }),
+        let totalBytes = UInt64(totalLine.dropFirst("MEMTOTAL=".count)),
+        totalBytes > 0,
+        let cpuLine = lines.first(where: { $0.hasPrefix("CPU usage:") }),
+        let memoryLine = lines.first(where: { $0.hasPrefix("PhysMem:") }),
+        let idle = firstNumber(in: cpuLine, before: "% idle"),
+        let usedBytes = memoryBytes(in: memoryLine, before: " used")
+    else {
+        return nil
+    }
+
+    return RemotePerformance(
+        processorLoad: min(max(100 - idle, 0), 100),
+        memoryUsedBytes: min(usedBytes, totalBytes),
+        memoryTotalBytes: totalBytes
+    )
+}
+
+private func firstNumber(in text: String, before marker: String) -> Double? {
+    guard let markerRange = text.range(of: marker) else { return nil }
+    let prefix = text[..<markerRange.lowerBound]
+    let start = prefix.lastIndex(where: { !$0.isNumber && $0 != "." }).map {
+        prefix.index(after: $0)
+    } ?? prefix.startIndex
+    return Double(prefix[start...])
+}
+
+private func memoryBytes(in text: String, before marker: String) -> UInt64? {
+    guard let markerRange = text.range(of: marker) else { return nil }
+    let prefix = text[..<markerRange.lowerBound]
+    guard let unitIndex = prefix.lastIndex(where: { "KMGTP".contains($0) }) else { return nil }
+    let numberPrefix = prefix[..<unitIndex]
+    let numberStart = numberPrefix.lastIndex(where: { !$0.isNumber && $0 != "." }).map {
+        numberPrefix.index(after: $0)
+    } ?? numberPrefix.startIndex
+    guard let value = Double(numberPrefix[numberStart...]) else { return nil }
+    let exponent: Int
+    switch prefix[unitIndex] {
+    case "K": exponent = 1
+    case "M": exponent = 2
+    case "G": exponent = 3
+    case "T": exponent = 4
+    case "P": exponent = 5
+    default: return nil
+    }
+    return UInt64(value * pow(1024, Double(exponent)))
+}
+
 func currentSMBMounts() async -> [MountedShare] {
     let (_, out) = await runProcess("/sbin/mount", [])
     return out.split(separator: "\n").compactMap { line -> MountedShare? in
@@ -116,17 +211,18 @@ func establishedInbound() async -> [String: [Int]] {
 // MARK: - mini 状态监测
 
 @MainActor
-@Observable
-final class StatusMonitor {
+final class StatusMonitor: ObservableObject {
     private let settings: AppSettings
 
-    var routeStatus: [UUID: RouteStatus] = [:]
-    var portStates: [UUID: PortState] = [:]
-    var mounts: [MountedShare] = []
-    var scanResults: [ScanResult]?
-    var scanning = false
-    var lastRefresh: Date?
-    var windowOpen = false {
+    @Published var routeStatus: [UUID: RouteStatus] = [:]
+    @Published var portStates: [UUID: PortState] = [:]
+    @Published var mounts: [MountedShare] = []
+    @Published var scanResults: [ScanResult]?
+    @Published var scanning = false
+    @Published var lastRefresh: Date?
+    @Published var remotePerformanceStatus: RemotePerformanceStatus = .checking
+    @Published var performanceRouteID: UUID?
+    @Published var windowOpen = false {
         didSet {
             if windowOpen && !oldValue {
                 Task { await self.refreshAll() }
@@ -188,21 +284,50 @@ final class StatusMonitor {
         for r in routes { newStatus[r.id]?.inboundPorts = inbound[r.ip] ?? [] }
         routeStatus = newStatus
 
-        if let host = bestRoute?.ip {
+        if let route = bestRoute {
             let entries = settings.ports
             var states: [UUID: PortState] = [:]
+            let performanceRoute = routes
+                .filter { newStatus[$0.id]?.reachable == true && newStatus[$0.id]?.sshOpen == true }
+                .min {
+                    (newStatus[$0.id]?.latencyMs ?? .infinity)
+                        < (newStatus[$1.id]?.latencyMs ?? .infinity)
+                }
+            if case .available = remotePerformanceStatus {
+                // 刷新时保留上次读数，避免进度条闪回“读取中”。
+            } else {
+                remotePerformanceStatus = .checking
+            }
+            performanceRouteID = performanceRoute?.id ?? route.id
+            let canReadPerformance = performanceRoute != nil
+            async let performance = remotePerformanceIfAvailable(
+                canReadPerformance,
+                username: settings.effectiveUsername,
+                host: performanceRoute?.ip ?? route.ip
+            )
             await withTaskGroup(of: (UUID, Bool).self) { group in
                 for e in entries {
                     group.addTask {
-                        let open = await probePort(host: host, port: UInt16(e.port))
+                        let open = await probePort(host: route.ip, port: UInt16(e.port))
                         return (e.id, open)
                     }
                 }
                 for await (id, open) in group { states[id] = open ? .open : .closed }
             }
             portStates = states
+            if canReadPerformance {
+                if let metrics = await performance {
+                    remotePerformanceStatus = .available(metrics)
+                } else {
+                    remotePerformanceStatus = .unavailable(.sshAccessRequired)
+                }
+            } else {
+                remotePerformanceStatus = .unavailable(.sshUnavailable)
+            }
         } else {
             portStates = [:]
+            performanceRouteID = nil
+            remotePerformanceStatus = .unavailable(.hostUnreachable)
         }
 
         mounts = await currentSMBMounts()
@@ -230,15 +355,14 @@ final class StatusMonitor {
 // MARK: - 本机信息
 
 @MainActor
-@Observable
-final class LocalInfo {
-    var username = NSUserName()
-    var fullName = NSFullUserName()
-    var hostName: String = ProcessInfo.processInfo.hostName
+final class LocalInfo: ObservableObject {
+    @Published var username = NSUserName()
+    @Published var fullName = NSFullUserName()
+    @Published var hostName: String = ProcessInfo.processInfo.hostName
 
-    var ips: [LocalIP] = []
-    var listening: [ListeningPort] = []
-    var loading = false
+    @Published var ips: [LocalIP] = []
+    @Published var listening: [ListeningPort] = []
+    @Published var loading = false
 
     /// 截图模式下置 true：refresh 变为空操作
     var frozen = false
@@ -254,7 +378,7 @@ final class LocalInfo {
     nonisolated static func interfaceKind(iface: String, ip: String) -> String {
         if ip.hasPrefix("100.") && iface.hasPrefix("utun") { return "tailscale" }
         if ip.hasPrefix("169.254") { return "thunderbolt" }
-        if iface == "en0" { return "wifi" }
+        if let wifi = wifiBSDName, iface == wifi { return "wifi" }
         if iface.hasPrefix("bridge") { return "bridge" }
         return iface
     }

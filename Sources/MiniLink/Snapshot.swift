@@ -36,6 +36,12 @@ func runSnapshotModeIfNeeded() {
     monitor.portStates = [p22.id: .open, p445.id: .open, p5900.id: .closed, p11434.id: .open]
     monitor.mounts = [MountedShare(source: "//alex@192.168.0.50/Media", mountPoint: "/Volumes/Media")]
     monitor.lastRefresh = Date()
+    monitor.performanceRouteID = lan.id
+    monitor.remotePerformanceStatus = .available(RemotePerformance(
+        processorLoad: 37,
+        memoryUsedBytes: 10_737_418_240,
+        memoryTotalBytes: 17_179_869_184
+    ))
     monitor.scanResults = Defaults.commonScanPorts.map {
         ScanResult(port: $0, open: [22, 80, 445, 3000, 11434].contains($0))
     }

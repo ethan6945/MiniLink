@@ -2,16 +2,17 @@ import SwiftUI
 
 @main
 struct MiniLinkApp: App {
-    @State private var settings: AppSettings
-    @State private var monitor: StatusMonitor
-    @State private var localInfo = LocalInfo()
+    @StateObject private var settings: AppSettings
+    @StateObject private var monitor: StatusMonitor
+    @StateObject private var localInfo: LocalInfo
 
     init() {
         runCheckModeIfNeeded()
         runSnapshotModeIfNeeded()
         let s = AppSettings()
-        _settings = State(initialValue: s)
-        _monitor = State(initialValue: StatusMonitor(settings: s))
+        _settings = StateObject(wrappedValue: s)
+        _monitor = StateObject(wrappedValue: StatusMonitor(settings: s))
+        _localInfo = StateObject(wrappedValue: LocalInfo())
     }
 
     var body: some Scene {
