@@ -43,7 +43,7 @@ enum L10n {
         "status.performanceSSHDown": "SSH is unavailable on the remote Mac",
         "status.performanceSSHAccess": "SSH key access is required to read performance",
         "status.performanceSSHSetup": "Set up SSH key to read performance",
-        "status.performanceSSHSetupHelp": "Open Terminal, create a MiniLink key, and install its public key after one password login.",
+        "status.performanceSSHSetupHelp": "Opens Terminal to create a MiniLink key, install its public key, and fix the remote home-folder permissions that block key login. You may be asked for the remote password.",
         "status.performanceSetupComplete": "SSH key setup complete. MiniLink will retry automatically.",
 
         "ports.title": "Remote port monitor",
@@ -129,7 +129,7 @@ enum L10n {
         "status.performanceSSHDown": "远端 Mac 的 SSH 不可用",
         "status.performanceSSHAccess": "读取性能需要配置 SSH 密钥登录",
         "status.performanceSSHSetup": "点击配置 SSH 密钥并读取性能",
-        "status.performanceSSHSetupHelp": "打开终端，创建 MiniLink 专用密钥，并在输入一次远端密码后安装公钥。",
+        "status.performanceSSHSetupHelp": "打开终端，创建 MiniLink 专用密钥、安装公钥，并修正会阻止密钥登录的远端家目录权限。可能需要输入远端密码。",
         "status.performanceSetupComplete": "SSH 密钥配置完成，MiniLink 将自动重试。",
 
         "ports.title": "远程端口监测",
